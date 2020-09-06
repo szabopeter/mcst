@@ -1,0 +1,6 @@
+*.swp
+jars/*.jar
+jars/*.tar
+jars/*.tgz
+jars/*.zip
+jars/*.7z

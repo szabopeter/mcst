@@ -1,0 +1,15 @@
+version: '2'
+
+volumes:
+  minecraft-servers:
+
+services:
+  minecraft:
+    build: .
+    user: "minecraft"
+    ports:
+      - "25565-25575:25565-25575"
+    volumes: 
+      - ./jars:/jars
+      - minecraft-servers:/servers
+    command: "tail -F /dev/null"
