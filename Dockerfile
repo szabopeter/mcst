@@ -1,10 +1,12 @@
-FROM ubuntu:19.10
+FROM ubuntu:20.04
 
 ARG UID=1000
 ARG GID=1000
 
 RUN apt-get update
-RUN apt-get install -y python3 python3-dev python3-pip default-jre
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Europe/Budapest
+RUN apt-get install -y python3 python3-pip default-jre && rm -rf /var/lib/apt/lists/*
 RUN groupadd -r -g $GID minecraft && useradd -r -m -u $UID -g minecraft minecraft
 
 RUN mkdir /servers
