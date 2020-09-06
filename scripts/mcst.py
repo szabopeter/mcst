@@ -7,6 +7,10 @@ import os
 import logging
 
 
+# TODO create using template
+# TODO remove server directory
+
+
 DEFAULT_JAR = "server.jar"
 
 
@@ -14,7 +18,7 @@ class Mcst:
     def __init__(self):
         self.servers_dir = pathlib.Path("/servers")
         self.jars_dir = pathlib.Path("/jars")
-        self.minecraft_server_command = "pwd;/usr/bin/java -Xmx1024M -Xms1024M -jar {jarfile} nogui"
+        self.minecraft_server_command = 'pwd;/usr/bin/java -Xmx1024M -Xms1024M -jar "{jarfile}" nogui'
         self.encoding = "utf-8"
 
     def create(self, name: str):
@@ -60,7 +64,7 @@ class Mcst:
                 eula_content = eula_content.replace("eula=false", "eula=true")
                 eula_txt.write_text(eula_content, encoding=self.encoding)
         os.chdir(directory)
-        command = self.minecraft_server_command.replace("{jarfile}", f'"{jarfile}"')
+        command = self.minecraft_server_command.replace("{jarfile}", f"{jarfile}")
         os.system(command)
 
     # noinspection PyMethodMayBeStatic
