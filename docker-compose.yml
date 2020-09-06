@@ -12,4 +12,4 @@ services:
     volumes: 
       - ./jars:/jars
       - minecraft-servers:/servers
-    command: "tail -F /dev/null"
+    command: "tail -F /scripts/mcst.log"
