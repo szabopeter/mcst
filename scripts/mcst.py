@@ -7,7 +7,6 @@ import os
 import logging
 
 
-# TODO list server directories
 # TODO create using template
 # TODO remove server directory
 
@@ -21,6 +20,11 @@ class Mcst:
         self.jars_dir = pathlib.Path("/jars")
         self.minecraft_server_command = 'pwd;/usr/bin/java -Xmx1024M -Xms1024M -jar "{jarfile}" nogui'
         self.encoding = "utf-8"
+
+    def list(self):
+        directory = self.servers_dir
+        subdirs = [subdir.name for subdir in directory.iterdir() if subdir.is_dir()]
+        return "\n".join(subdirs)
 
     def create(self, name: str):
         directory = self.servers_dir / name
@@ -81,6 +85,9 @@ class ArgumentsHandler:
         parser = argparse.ArgumentParser(description='Minecraft Server Tools')
         subparsers = parser.add_subparsers()
 
+        parser_list = subparsers.add_parser("list", help="List server directories")
+        parser_list.set_defaults(func=self.list_func)
+
         parser_create = subparsers.add_parser("create", help="Initialize a new server directory")
         parser_create.add_argument("name", type=str, help="Server directory name")
         parser_create.set_defaults(func=self.create_func)
@@ -102,6 +109,9 @@ class ArgumentsHandler:
         parser_start.set_defaults(func=self.start_func)
         parsed = parser.parse_args(args)
         parsed.func(parsed)
+
+    def list_func(self, args):
+        print(self.mcst.list())
 
     def create_func(self, args):
         self.mcst.create(args.name)
