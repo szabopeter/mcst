@@ -1,5 +1,5 @@
-docker exec -it minecraftdocker_minecraft_1 /scripts/mcst.py create foobar
+docker exec -i minecraftdocker_minecraft_1 /scripts/mcst.py create foobar
 docker exec -i minecraftdocker_minecraft_1 /scripts/mcst.py settings-show foobar >foobar.txt
 # vim foobar.txt
-docker exec -it minecraftdocker_minecraft_1 /scripts/mcst.py settings-replace foobar <foobar.txt
-docker exec -it minecraftdocker_minecraft_1 /scripts/mcst.py start foobar
+docker exec -i minecraftdocker_minecraft_1 /scripts/mcst.py settings-replace foobar <foobar.txt
+docker exec -i minecraftdocker_minecraft_1 /scripts/mcst.py start foobar

@@ -7,6 +7,7 @@ import os
 import logging
 
 
+# TODO list server directories
 # TODO create using template
 # TODO remove server directory
 
