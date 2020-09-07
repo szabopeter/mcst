@@ -226,6 +226,7 @@ class McstBackendTest(McstBackendInterface):
 def main():
     root = tk.Tk()
     root.title("MC Server Tool Frontend")
+    root.eval(f'tk::PlaceWindow . center')
     backend = McstBackendTest() if "--devmode" in sys.argv else McstBackend()
     app = McstFrontend(master=root, backend=backend)
     app.mainloop()
