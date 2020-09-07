@@ -262,14 +262,14 @@ class McstBackend(McstBackendInterface):
 
 class McstBackendTest(McstBackendInterface):
     def __init__(self):
-        self.directories = ["A"]
+        self.directories = ["easy", "normal", "hard", "hardcore", "creative"]
 
     def list(self) -> List[str]:
-        self.directories.append(self.directories[-1] * 2)
         return self.directories
 
     def create(self, name: str):
         os.system("bc -v")
+        self.directories.append(name)
         print(f"Created new server directory {name}")
 
     def settings_dump(self, name: str) -> str:
