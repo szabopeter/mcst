@@ -17,11 +17,14 @@ class McstFrontend(tk.Frame):
         self.directories = []
         self.config_loaded = False
         self.selected_dir = None
+        self.new_name = None
 
         self.directory_selection_frame = None
         self.refresh_directories_button = None
         self.directories_list = None
-        self.quit_btn = None
+        self.new_name_textbox = None
+        self.new_name_button = None
+        self.quit_button = None
 
         self.directory_operations_frame = None
         self.config_frame = None
@@ -34,6 +37,7 @@ class McstFrontend(tk.Frame):
         self.create_widgets()
         self.arrange_widgets()
         self.refresh_directories()
+        self.new_name_modified(None)
 
     def create_widgets(self):
         self.directory_selection_frame = tk.Frame(self)
@@ -44,7 +48,20 @@ class McstFrontend(tk.Frame):
             command=self.refresh_directories
         )
 
-        self.quit_btn = tk.Button(
+        self.new_name_textbox = tk.Text(
+            master=self.directory_selection_frame,
+            height=1,
+            width=22
+        )
+        self.new_name_textbox.bind("<<Modified>>", self.new_name_modified)
+
+        self.new_name_button = tk.Button(
+            master=self.directory_selection_frame,
+            text="Create",
+            command=self.create_server_directory
+        )
+
+        self.quit_button = tk.Button(
             master=self.directory_selection_frame,
             text="Quit",
             command=self.master.destroy
@@ -93,7 +110,9 @@ class McstFrontend(tk.Frame):
         self.directory_selection_frame.pack(side=tk.LEFT, fill=tk.Y, expand=True)
         self.refresh_directories_button.pack()
         self.directories_list.pack(fill=tk.Y, expand=True)
-        self.quit_btn.pack()
+        self.new_name_textbox.pack()
+        self.new_name_button.pack()
+        self.quit_button.pack()
         self.directory_operations_frame.pack()
         self.config_frame.pack()
         self.config_operations_frame.pack()
@@ -129,6 +148,28 @@ class McstFrontend(tk.Frame):
         print(f"Selected {self.selected_dir}")
         self.set_directory_operations_state(tk.NORMAL)
         self.clear_config()
+
+    def new_name_modified(self, event):
+        new_name = self.new_name_textbox.get("1.0", tk.END).strip()
+        if new_name == self.new_name:
+            return
+        self.new_name = new_name
+        button_state = tk.NORMAL if self.is_new_name_valid() else tk.DISABLED
+        self.new_name_button.config(state=button_state)
+        self.new_name_textbox.edit_modified(False)
+
+    def is_new_name_valid(self):
+        return self.new_name and self.new_name not in self.directories
+
+    def create_server_directory(self):
+        if self.is_new_name_valid() is False:
+            print("Invalid name specified!")
+            return
+        self.winfo_toplevel().iconify()
+        self.backend.create(self.new_name)
+        self.winfo_toplevel().deiconify()
+        self.refresh_directories()
+        self.new_name_textbox.delete("1.0", tk.END)
 
     def clear_config(self):
         self.config_editor_textbox.delete("1.0", tk.END)
@@ -182,6 +223,10 @@ class McstBackendInterface(ABC):
     def start(self, name: str):
         pass
 
+    @abstractmethod
+    def create(self, name: str):
+        pass
+
 
 class McstBackend(McstBackendInterface):
     def __init__(self):
@@ -190,6 +235,9 @@ class McstBackend(McstBackendInterface):
     def list(self) -> List[str]:
         output = os.popen(f"{self.command_template} list").read()
         return [name for name in output.split("\n") if name]
+
+    def create(self, name: str):
+        os.system(f'{self.command_template} create "{name}"')
 
     def settings_dump(self, name: str) -> str:
         output = os.popen(f'{self.command_template} settings-show "{name}"').read()
@@ -210,6 +258,10 @@ class McstBackendTest(McstBackendInterface):
     def list(self) -> List[str]:
         self.directories.append(self.directories[-1] * 2)
         return self.directories
+
+    def create(self, name: str):
+        os.system("bc -v")
+        print(f"Created new server directory {name}")
 
     def settings_dump(self, name: str) -> str:
         return f"Loremipsum...\nPlaceholder for {name} settings\n"*40
