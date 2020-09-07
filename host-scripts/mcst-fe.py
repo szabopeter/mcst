@@ -6,6 +6,9 @@ from abc import ABC, abstractmethod
 from typing import List
 
 
+BUTTON_WIDTH = 16
+
+
 class McstFrontend(tk.Frame):
     def __init__(self, master, backend: "McstBackendInterface"):
         super().__init__(master)
@@ -45,6 +48,7 @@ class McstFrontend(tk.Frame):
         self.refresh_directories_button = tk.Button(
             master=self.directory_selection_frame,
             text="Refresh",
+            width=BUTTON_WIDTH,
             command=self.refresh_directories
         )
 
@@ -58,12 +62,14 @@ class McstFrontend(tk.Frame):
         self.new_name_button = tk.Button(
             master=self.directory_selection_frame,
             text="Create",
+            width=BUTTON_WIDTH,
             command=self.create_server_directory
         )
 
         self.quit_button = tk.Button(
             master=self.directory_selection_frame,
             text="Quit",
+            width=BUTTON_WIDTH,
             command=self.master.destroy
         )
 
@@ -81,6 +87,7 @@ class McstFrontend(tk.Frame):
         self.config_load_button = tk.Button(
             master=self.config_operations_frame,
             text="Load",
+            width=BUTTON_WIDTH,
             state=tk.DISABLED,
             command=self.load_config
         )
@@ -88,6 +95,7 @@ class McstFrontend(tk.Frame):
         self.config_save_button = tk.Button(
             master=self.config_operations_frame,
             text="Save",
+            width=BUTTON_WIDTH,
             state=tk.DISABLED,
             command=self.save_config
         )
@@ -102,6 +110,7 @@ class McstFrontend(tk.Frame):
         self.directory_start_button = tk.Button(
             master=self.directory_operations_frame,
             text="START!",
+            width=BUTTON_WIDTH*2,
             state=tk.DISABLED,
             command=self.start
         )
