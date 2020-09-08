@@ -7,7 +7,6 @@ import os
 import logging
 
 
-# TODO create using template
 # TODO remove server directory
 
 
@@ -22,9 +21,14 @@ class Mcst:
         self.encoding = "utf-8"
 
     def list(self):
-        directory = self.servers_dir
-        subdirs = [subdir.name for subdir in directory.iterdir() if subdir.is_dir()]
+        subdirs = [subdir.name
+                   for subdir in self.get_server_directories()]
         return "\n".join(subdirs)
+
+    def get_server_directories(self):
+        return (subdir
+                for subdir in self.servers_dir.iterdir()
+                if subdir.is_dir())
 
     def create(self, name: str):
         directory = self.servers_dir / name
@@ -72,6 +76,28 @@ class Mcst:
         command = self.minecraft_server_command.replace("{jarfile}", f"{jarfile}")
         os.system(command)
 
+    def clone(self, name: str, template: str):
+        if template is None:
+            template = self.get_a_random_name()
+            if template is None:
+                self.create(name)
+                self.log(f"There was nothing that could be used as a template, so {name} was created from scratch.")
+                return
+        target_dir = self.servers_dir / name
+        if target_dir.exists():
+            raise FileExistsError()
+        source_dir = self.servers_dir / template
+        if source_dir.exists() is False:
+            raise FileNotFoundError()
+        target_dir.mkdir()
+        for filename in ["eula.txt", "server.properties"]:
+            (target_dir / filename).write_bytes((source_dir / filename).read_bytes())
+        self.log(f"Initialized {target_dir} from {template}")
+
+    def get_a_random_name(self):
+        for subdir in self.get_server_directories():
+            return subdir.name
+
     # noinspection PyMethodMayBeStatic
     def log(self, message):
         logging.info(message)
@@ -107,6 +133,12 @@ class ArgumentsHandler:
         parser_start.add_argument("--jar", type=str, help="jar file to use from the jars directory",
                                   default=None)
         parser_start.set_defaults(func=self.start_func)
+
+        parser_clone = subparsers.add_parser("clone", help="Initialize a new server directory based on another")
+        parser_clone.add_argument("name", type=str, help="New server directory name")
+        parser_clone.add_argument("--template", type=str, help="Server directory to use as template", default=None)
+        parser_clone.set_defaults(func=self.clone_func)
+
         parsed = parser.parse_args(args)
         parsed.func(parsed)
 
@@ -125,6 +157,9 @@ class ArgumentsHandler:
 
     def start_func(self, args):
         self.mcst.start(args.name, args.jar)
+
+    def clone_func(self, args):
+        self.mcst.clone(args.name, args.template)
 
 
 def main(args):

@@ -3,8 +3,7 @@ import os
 import sys
 import tkinter as tk
 from abc import ABC, abstractmethod
-from typing import List
-
+from typing import List, Optional
 
 BUTTON_WIDTH = 16
 
@@ -135,6 +134,7 @@ class McstFrontend(tk.Frame):
         self.directories_prop.set(self.directories)
         self.directories_list.selection_clear(0, tk.END)
         self.set_directory_operations_state(tk.DISABLED)
+        self.dir_selected(None)
 
     def set_directory_operations_state(self, state):
         for button in (
@@ -151,11 +151,14 @@ class McstFrontend(tk.Frame):
         if len(selection) == 0:
             self.selected_dir = None
             self.set_directory_operations_state(tk.DISABLED)
+            self.new_name_button.config(text="Create")
+            self.clear_config()
             return
         index = selection[0]
         self.selected_dir = self.directories[index]
         print(f"Selected {self.selected_dir}")
         self.set_directory_operations_state(tk.NORMAL)
+        self.new_name_button.config(text="Clone")
         self.clear_config()
 
     def new_name_modified(self, event):
@@ -175,7 +178,10 @@ class McstFrontend(tk.Frame):
             print("Invalid name specified!")
             return
         self.winfo_toplevel().iconify()
-        self.backend.create(self.new_name)
+        if self.selected_dir is None:
+            self.backend.create(self.new_name)
+        else:
+            self.backend.clone(self.new_name, self.selected_dir)
         self.winfo_toplevel().deiconify()
         self.refresh_directories()
         self.new_name_textbox.delete("1.0", tk.END)
@@ -236,6 +242,10 @@ class McstBackendInterface(ABC):
     def create(self, name: str):
         pass
 
+    @abstractmethod
+    def clone(self, name: str, template:str):
+        pass
+
 
 class McstBackend(McstBackendInterface):
     def __init__(self):
@@ -258,6 +268,12 @@ class McstBackend(McstBackendInterface):
 
     def start(self, name: str):
         os.system(f'{self.command_template} start "{name}"')
+
+    def clone(self, name: str, template: Optional[str]):
+        if template is None:
+            os.system(f'{self.command_template} clone "{name}"')
+        else:
+            os.system(f'{self.command_template} clone --template "{template}" "{name}"')
 
 
 class McstBackendTest(McstBackendInterface):
@@ -282,6 +298,10 @@ class McstBackendTest(McstBackendInterface):
 
     def start(self, name: str):
         os.system("bc")
+
+    def clone(self, name: str, template: Optional[str]):
+        self.directories.append(name)
+        print(f"Created {name} based on {template}")
 
 
 def main():
