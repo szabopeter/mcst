@@ -7,7 +7,9 @@ import os
 import logging
 
 
+# TODO Create backup: tar -c habo3t1/ >/jars/habo3b.tar
 # TODO remove server directory
+# TODO Restore backup: tar -x </jars/habo3b.tar
 
 
 DEFAULT_JAR = "server.jar"
@@ -146,6 +148,7 @@ class ArgumentsHandler:
         print(self.mcst.list())
 
     def create_func(self, args):
+        # TODO This should also have a jar argument
         self.mcst.create(args.name)
 
     def settings_show_func(self, args):
