@@ -19,7 +19,7 @@ class Mcst:
     def __init__(self):
         self.servers_dir = pathlib.Path("/servers")
         self.jars_dir = pathlib.Path("/jars")
-        self.minecraft_server_command = 'pwd;/usr/bin/java -Xmx1024M -Xms1024M -jar "{jarfile}" nogui'
+        self.minecraft_server_command = 'pwd;/usr/bin/java -Xmx1024M -Xms1024M -jar "{jarfile}" {additional_args}'
         self.encoding = "utf-8"
 
     def list(self):
@@ -59,10 +59,14 @@ class Mcst:
         server_properties.write_text(new_content, encoding=self.encoding)
         self.log(f"Replaced settings in {server_properties}")
 
-    def start(self, name: str, jar: str = None):
+    def start(self, name: str, jar: str = None, port: str = None):
         if jar is None:
             jar = DEFAULT_JAR
         directory = self.servers_dir / name
+        additional_args = ["--nogui"]
+        if port is not None:
+            additional_args.append(f"--port {port}")
+        additional_args_str = " ".join(additional_args)
         if directory.exists() is False:
             raise FileNotFoundError()
         jarfile = self.jars_dir / jar
@@ -75,7 +79,10 @@ class Mcst:
                 eula_content = eula_content.replace("eula=false", "eula=true")
                 eula_txt.write_text(eula_content, encoding=self.encoding)
         os.chdir(directory)
-        command = self.minecraft_server_command.replace("{jarfile}", f"{jarfile}")
+        command = (self.minecraft_server_command
+                   .replace("{jarfile}", f"{jarfile}")
+                   .replace("{additional_args}", f"{additional_args_str}")
+                   )
         os.system(command)
 
     def clone(self, name: str, template: str):
@@ -134,6 +141,8 @@ class ArgumentsHandler:
         parser_start.add_argument("name", type=str, help="Server directory name")
         parser_start.add_argument("--jar", type=str, help="jar file to use from the jars directory",
                                   default=None)
+        parser_start.add_argument("--port", type=int, help="Port to use, overrides server.properties",
+                                  default=None)
         parser_start.set_defaults(func=self.start_func)
 
         parser_clone = subparsers.add_parser("clone", help="Initialize a new server directory based on another")
@@ -159,7 +168,7 @@ class ArgumentsHandler:
         self.mcst.settings_replace(args.name, new_content)
 
     def start_func(self, args):
-        self.mcst.start(args.name, args.jar)
+        self.mcst.start(args.name, args.jar, args.port)
 
     def clone_func(self, args):
         self.mcst.clone(args.name, args.template)
