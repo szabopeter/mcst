@@ -13,3 +13,4 @@ services:
       - ./jars:/jars
       - minecraft-servers:/servers
     command: "tail -F /scripts/mcst.log"
+    restart: unless-stopped

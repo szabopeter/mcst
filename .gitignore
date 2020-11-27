@@ -5,3 +5,4 @@ jars/*.tgz
 jars/*.zip
 jars/*.7z
 .idea
+__pycache__
