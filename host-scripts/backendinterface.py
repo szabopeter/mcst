@@ -2,6 +2,8 @@ import os
 from abc import ABC, abstractmethod
 from typing import List, Optional
 
+from dirinfo import McServerDirectoryInfo
+
 
 class McstBackendInterface(ABC):
     @abstractmethod
@@ -17,7 +19,11 @@ class McstBackendInterface(ABC):
         pass
 
     @abstractmethod
-    def start(self, name: str):
+    def load_info(self, name: str) -> McServerDirectoryInfo:
+        pass
+
+    @abstractmethod
+    def start(self, name: str, port: str, version: str):
         pass
 
     @abstractmethod
@@ -48,8 +54,12 @@ class McstBackend(McstBackendInterface):
         pipe = os.popen(f'{self.command_template} settings-replace "{name}"', mode="w")
         pipe.write(new_content)
 
-    def start(self, name: str):
-        os.system(f'{self.command_template} start "{name}"')
+    def load_info(self, name: str) -> McServerDirectoryInfo:
+        output = os.popen(f'{self.command_template} info "{name}"').read()
+        return McServerDirectoryInfo.load(output)
+
+    def start(self, name: str, port: str, version: str):
+        os.system(f'{self.command_template} start --port {port} --mcversion {version} "{name}"')
 
     def clone(self, name: str, template: Optional[str]):
         if template is None:
@@ -78,7 +88,14 @@ class McstBackendTest(McstBackendInterface):
         print("New content will be:")
         print(new_content)
 
-    def start(self, name: str):
+    def load_info(self, name: str) -> McServerDirectoryInfo:
+        print(f"Retrieving infos for {name}")
+        info = McServerDirectoryInfo()
+        index = self.directories.index(name)
+        info.last_server_version = f"1.16.{index}"
+        return info
+
+    def start(self, name: str, port: str, version: str):
         os.system("bc")
 
     def clone(self, name: str, template: Optional[str]):

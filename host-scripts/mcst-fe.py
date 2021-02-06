@@ -2,13 +2,13 @@
 import sys
 import tkinter as tk
 
-from backendinterface import McstBackend, McstBackendTest
+from backendinterface import McstBackendInterface, McstBackend, McstBackendTest
 
 BUTTON_WIDTH = 16
 
 
 class McstFrontend(tk.Frame):
-    def __init__(self, master, backend: "McstBackendInterface"):
+    def __init__(self, master, backend: McstBackendInterface):
         super().__init__(master)
         self.master = master
         self.backend = backend
@@ -19,6 +19,9 @@ class McstFrontend(tk.Frame):
         self.config_loaded = False
         self.selected_dir = None
         self.new_name = None
+        self.default_version = "1.16.1"
+        self.versions = [self.default_version, "1.16.4", "1.16.5"]
+        self.selected_version = tk.StringVar(master=master)
 
         self.directory_selection_frame = None
         self.refresh_directories_button = None
@@ -32,7 +35,9 @@ class McstFrontend(tk.Frame):
         self.config_operations_frame = None
         self.config_load_button = None
         self.config_save_button = None
+        self.config_editor_version = None
         self.config_editor_textbox = None
+        self.versions_list = None
         self.directory_start_button = None
 
         self.create_widgets()
@@ -105,6 +110,22 @@ class McstFrontend(tk.Frame):
             state=tk.DISABLED
         )
 
+        self.config_editor_version = tk.Text(
+            master=self.config_frame,
+            width=20,
+            height=1,
+            state=tk.DISABLED
+        )
+
+        self.selected_version.set(self.default_version)
+        other_values = [x for x in self.versions if x != self.default_version]
+        self.versions_list = tk.OptionMenu(
+            self.directory_operations_frame,
+            self.selected_version,
+            self.selected_version.get(),
+            *other_values
+        )
+
         self.directory_start_button = tk.Button(
             master=self.directory_operations_frame,
             text="START!",
@@ -126,6 +147,8 @@ class McstFrontend(tk.Frame):
         self.config_load_button.pack(side=tk.LEFT)
         self.config_save_button.pack()
         self.config_editor_textbox.pack()
+        self.config_editor_version.pack()
+        self.versions_list.pack()
         self.directory_start_button.pack()
 
     def refresh_directories(self):
@@ -152,6 +175,7 @@ class McstFrontend(tk.Frame):
             self.set_directory_operations_state(tk.DISABLED)
             self.new_name_button.config(text="Create")
             self.clear_config()
+            self.update_dirversion("")
             return
         index = selection[0]
         self.selected_dir = self.directories[index]
@@ -159,6 +183,7 @@ class McstFrontend(tk.Frame):
         self.set_directory_operations_state(tk.NORMAL)
         self.new_name_button.config(text="Clone")
         self.clear_config()
+        self.update_dirversion(self.backend.load_info(self.selected_dir).last_server_version)
 
     def new_name_modified(self, event):
         new_name = self.new_name_textbox.get("1.0", tk.END).strip()
@@ -189,6 +214,16 @@ class McstFrontend(tk.Frame):
         self.config_editor_textbox.delete("1.0", tk.END)
         self.config_loaded = False
 
+    def update_dirversion(self, version_text: str):
+        self.config_editor_version.config(state=tk.NORMAL)
+        self.config_editor_version.delete("1.0", tk.END)
+        self.config_editor_version.insert("1.0", version_text)
+        self.config_editor_version.config(state=tk.DISABLED)
+        if version_text in self.versions:
+            self.choose_version(version_text)
+        else:
+            self.choose_version(self.default_version)
+
     def load_config(self):
         if self.selected_dir is None:
             print("No server directory selected")
@@ -197,6 +232,7 @@ class McstFrontend(tk.Frame):
         editor_text = self.backend.settings_dump(self.selected_dir)
         self.config_editor_textbox.delete("1.0", tk.END)
         self.config_editor_textbox.insert("1.0", editor_text)
+        self.update_dirversion(self.backend.load_info(self.selected_dir).last_server_version)
         self.config_loaded = True
 
     def save_config(self):
@@ -214,10 +250,16 @@ class McstFrontend(tk.Frame):
         if self.selected_dir is None:
             print("No server directory selected")
             return
+        version = self.selected_version.get()
+        port = "25565"
         self.winfo_toplevel().iconify()
-        print(f"Starting {self.selected_dir}, this will be your console:")
-        self.backend.start(self.selected_dir)
+        print(f"Starting {self.selected_dir} using v{version} on port {port}, this will be your console:")
+        self.backend.start(self.selected_dir, port, version)
+        print(f"Server stopped, you can continue on the GUI")
         self.winfo_toplevel().deiconify()
+
+    def choose_version(self, version):
+        self.selected_version.set(version)
 
 
 def main():
