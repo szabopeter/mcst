@@ -22,6 +22,7 @@ class McstFrontend(tk.Frame):
         self.default_version = "1.16.1"
         self.versions = [self.default_version, "1.16.4", "1.16.5"]
         self.selected_version = tk.StringVar(master=master)
+        self.port = "25565"
 
         self.directory_selection_frame = None
         self.refresh_directories_button = None
@@ -37,6 +38,7 @@ class McstFrontend(tk.Frame):
         self.config_save_button = None
         self.config_editor_version = None
         self.config_editor_textbox = None
+        self.port_textbox = None
         self.versions_list = None
         self.directory_start_button = None
 
@@ -117,6 +119,14 @@ class McstFrontend(tk.Frame):
             state=tk.DISABLED
         )
 
+        self.port_textbox = tk.Text(
+            master=self.directory_operations_frame,
+            height=1,
+            width=20
+        )
+        self.port_textbox.insert("1.0", self.port)
+        self.port_textbox.bind("<<Modified>>", self.port_modified)
+
         self.selected_version.set(self.default_version)
         other_values = [x for x in self.versions if x != self.default_version]
         self.versions_list = tk.OptionMenu(
@@ -148,6 +158,7 @@ class McstFrontend(tk.Frame):
         self.config_save_button.pack()
         self.config_editor_textbox.pack()
         self.config_editor_version.pack()
+        self.port_textbox.pack()
         self.versions_list.pack()
         self.directory_start_button.pack()
 
@@ -184,6 +195,11 @@ class McstFrontend(tk.Frame):
         self.new_name_button.config(text="Clone")
         self.clear_config()
         self.update_dirversion(self.backend.load_info(self.selected_dir).last_server_version)
+
+    def port_modified(self, event):
+        new_port = self.port_textbox.get("1.0", tk.END).strip()
+        self.port = new_port
+        self.port_textbox.edit_modified(False)
 
     def new_name_modified(self, event):
         new_name = self.new_name_textbox.get("1.0", tk.END).strip()
@@ -251,7 +267,10 @@ class McstFrontend(tk.Frame):
             print("No server directory selected")
             return
         version = self.selected_version.get()
-        port = "25565"
+        port = self.port
+        if self.is_port_valid(port) is False:
+            print("Invalid port number")
+            return
         self.winfo_toplevel().iconify()
         print(f"Starting {self.selected_dir} using v{version} on port {port}, this will be your console:")
         self.backend.start(self.selected_dir, port, version)
@@ -260,6 +279,13 @@ class McstFrontend(tk.Frame):
 
     def choose_version(self, version):
         self.selected_version.set(version)
+
+    def is_port_valid(self, port: str) -> bool:
+        try:
+            port = int(port)
+        except:
+            return False
+        return 1000 < port < 65536
 
 
 def main():
