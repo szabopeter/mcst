@@ -20,7 +20,7 @@ class McstFrontend(tk.Frame):
         self.selected_dir = None
         self.new_name = None
         self.default_version = "1.16.1"
-        self.versions = [self.default_version, "1.16.4", "1.16.5"]
+        self.versions = [self.default_version, "1.16.4", "1.16.5", "21w11a"]
         self.selected_version = tk.StringVar(master=master)
         self.port = "25565"
 
