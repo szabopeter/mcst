@@ -34,6 +34,10 @@ class McstBackendInterface(ABC):
     def clone(self, name: str, template:str):
         pass
 
+    @abstractmethod
+    def list_versions(self) -> List[str]:
+        pass
+
 
 class McstBackend(McstBackendInterface):
     def __init__(self):
@@ -66,6 +70,10 @@ class McstBackend(McstBackendInterface):
             os.system(f'{self.command_template} clone "{name}"')
         else:
             os.system(f'{self.command_template} clone --template "{template}" "{name}"')
+
+    def list_versions(self) -> List[str]:
+        output = os.popen(f"{self.command_template} list-versions").read()
+        return [version for version in output.split("\n") if version]
 
 
 class McstBackendTest(McstBackendInterface):
@@ -101,3 +109,6 @@ class McstBackendTest(McstBackendInterface):
     def clone(self, name: str, template: Optional[str]):
         self.directories.append(name)
         print(f"Created {name} based on {template}")
+
+    def list_versions(self) -> List[str]:
+        return ["1.12.1", "1.12.3", "1.14.1", "1.16.1"]
